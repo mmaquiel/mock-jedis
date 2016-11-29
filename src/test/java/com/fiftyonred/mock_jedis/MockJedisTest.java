@@ -2,7 +2,7 @@ package com.fiftyonred.mock_jedis;
 
 import org.junit.Before;
 import org.junit.Test;
-import redis.clients.jedis.Jedis;
+
 import redis.clients.jedis.SortingParams;
 import redis.clients.jedis.exceptions.JedisDataException;
 
@@ -11,64 +11,64 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 public class MockJedisTest {
-	private Jedis j = null;
+	private MockJedis mockJedis = null;
 
 	@Before
 	public void setUp() {
-		j = new MockJedis("test");
+		mockJedis = new MockJedis("test");
 	}
 
 	@Test
 	public void testSet() {
-		assertEquals("OK", j.set("test", "123"));
+		assertEquals("OK", mockJedis.set("test", "123"));
 	}
 
 	@Test
 	public void testGet() {
-		j.set("test", "123");
-		assertEquals("123", j.get("test"));
-		assertEquals(null, j.get("unknown"));
+		mockJedis.set("test", "123");
+		assertEquals("123", mockJedis.get("test"));
+		assertEquals(null, mockJedis.get("unknown"));
 	}
 
 	@Test
 	public void testHashes() {
-		assertEquals(0L, j.hlen("test").longValue());
-		assertEquals(0L, j.hdel("test", "name").longValue());
-		assertEquals(null, j.hget("test", "name"));
-		j.hset("test", "name", "value");
-		final Set<String> keys = j.hkeys("test");
-		final Map<String, String> entries = j.hgetAll("test");
-		final List<String> vals = j.hvals("test");
+		assertEquals(0L, mockJedis.hlen("test").longValue());
+		assertEquals(0L, mockJedis.hdel("test", "name").longValue());
+		assertEquals(null, mockJedis.hget("test", "name"));
+		mockJedis.hset("test", "name", "value");
+		final Set<String> keys = mockJedis.hkeys("test");
+		final Map<String, String> entries = mockJedis.hgetAll("test");
+		final List<String> vals = mockJedis.hvals("test");
 		assertTrue(keys.contains("name"));
 		assertEquals(1, keys.size());
 		assertEquals(1, entries.size());
 		assertEquals("value", entries.get("name"));
 		assertTrue(vals.contains("value"));
 		assertEquals(1, vals.size());
-		assertTrue(j.hexists("test", "name"));
-		assertFalse(j.hexists("test", "name2"));
-		assertEquals(1L, j.hlen("test").longValue());
-		assertEquals("value", j.hget("test", "name"));
-		assertEquals(1L, j.hdel("test", "name").longValue());
+		assertTrue(mockJedis.hexists("test", "name"));
+		assertFalse(mockJedis.hexists("test", "name2"));
+		assertEquals(1L, mockJedis.hlen("test").longValue());
+		assertEquals("value", mockJedis.hget("test", "name"));
+		assertEquals(1L, mockJedis.hdel("test", "name").longValue());
 	}
 
 	@Test
 	public void testSets() {
-		assertFalse(j.sismember("test", "member 1"));
+		assertFalse(mockJedis.sismember("test", "member 1"));
 
-		assertEquals(2L, (long) j.sadd("test", "member 1", "member 2"));
-		assertEquals(1L, (long) j.sadd("test", "member 3"));
+		assertEquals(2L, (long) mockJedis.sadd("test", "member 1", "member 2"));
+		assertEquals(1L, (long) mockJedis.sadd("test", "member 3"));
 
 		// duplicate member 1. should drop
-		assertEquals(0L, (long) j.sadd("test", "member 1"));
+		assertEquals(0L, (long) mockJedis.sadd("test", "member 1"));
 
-		assertEquals(3, j.smembers("test").size());
+		assertEquals(3, mockJedis.smembers("test").size());
 
 		// should remove member 3
-		assertEquals(1L, (long) j.srem("test", "member 3"));
+		assertEquals(1L, (long) mockJedis.srem("test", "member 3"));
 
 		List<String> sortedMembers = new ArrayList<String>(2);
-		sortedMembers.addAll(j.smembers("test"));
+		sortedMembers.addAll(mockJedis.smembers("test"));
 		Collections.sort(sortedMembers);
 
 		assertEquals("member 1", sortedMembers.get(0));
@@ -77,143 +77,144 @@ public class MockJedisTest {
 
 	@Test
 	public void testHincrBy() {
-		j.hincrBy("test1", "name", 10);
-		assertEquals("10", j.hget("test1", "name"));
+		mockJedis.hincrBy("test1", "name", 10);
+		assertEquals("10", mockJedis.hget("test1", "name"));
 
-		j.hincrBy("test1", "name", -2);
-		assertEquals("8", j.hget("test1", "name"));
+		mockJedis.hincrBy("test1", "name", -2);
+		assertEquals("8", mockJedis.hget("test1", "name"));
 
-		j.hset("test1", "name", "5");
-		j.hincrBy("test1", "name", 2);
-		assertEquals("7", j.hget("test1", "name"));
+		mockJedis.hset("test1", "name", "5");
+		mockJedis.hincrBy("test1", "name", 2);
+		assertEquals("7", mockJedis.hget("test1", "name"));
 
-		j.hincrByFloat("test1", "name", -0.5D);
-		assertEquals("6.5", j.hget("test1", "name"));
+		mockJedis.hincrByFloat("test1", "name", -0.5D);
+		assertEquals("6.5", mockJedis.hget("test1", "name"));
 	}
 
 	@Test
-	public void testList() {
-		assertEquals(Long.valueOf(0), j.llen("test"));
+	public void lpushShoudAddAnElementToTheHeadOfAList() {
+		mockJedis.lpush("test", "a");
+		mockJedis.lpush("test", "b");
+		mockJedis.lpush("test", "c");
 
-		j.lpush("test", "a");
-		j.lpush("test", "b");
-		j.lpush("test", "c");
+		assertEquals(Arrays.asList("c", "b", "a"), mockJedis.lrange("test", 0, -1));
+	}
 
-		assertEquals(Long.valueOf(3), j.llen("test"));
+	@Test
+	public void rpushShouldAddAnElementAtTheTailOfAList() {
+		mockJedis.rpush("test", "a");
+		mockJedis.rpush("test", "b");
+		mockJedis.rpush("test", "c");
 
-		assertEquals("c", j.lpop("test"));
-		assertEquals("b", j.lpop("test"));
-		assertEquals("a", j.lpop("test"));
-
-		assertEquals(Long.valueOf(0), j.llen("test"));
+		assertEquals(Arrays.asList("a", "b", "c"), mockJedis.lrange("test", 0, -1));
 	}
 
 	@Test
 	public void testLRange() {
-		j.lpush("test", "a");
-		j.lpush("test", "b");
-		j.lpush("test", "c");
-		j.lpush("test", "d");
+		mockJedis.lpush("test", "a");
+		mockJedis.lpush("test", "b");
+		mockJedis.lpush("test", "c");
+		mockJedis.lpush("test", "d");
 
-		assertEquals(Arrays.asList("a", "b"), j.lrange("test", 0, 1));
-		assertEquals(Arrays.asList("c", "d"), j.lrange("test", 2, 5));
-		assertEquals(Arrays.asList("c", "d"), j.lrange("test", -2, -1));
-		assertEquals(Arrays.asList("c"), j.lrange("test", -2, -2));
-		assertEquals(0, j.lrange("test", -7, -6).size());
-		assertEquals(0, j.lrange("test", 6, 7).size());
+		assertEquals(Arrays.asList("d", "c"), mockJedis.lrange("test", 0, 1));
+		assertEquals(Arrays.asList("b", "a"), mockJedis.lrange("test", 2, 5));
+		assertEquals(Arrays.asList("b", "a"), mockJedis.lrange("test", -2, -1));
+		assertEquals(Arrays.asList("b"), mockJedis.lrange("test", -2, -2));
+		assertEquals(0, mockJedis.lrange("test", -7, -6).size());
+		assertEquals(0, mockJedis.lrange("test", 6, 7).size());
 	}
 
 	@Test
 	public void testSort() {
-		j.lpush("test", "a");
-		j.lpush("test", "c");
-		j.lpush("test", "b");
-		j.lpush("test", "d");
+		mockJedis.lpush("test", "a");
+		mockJedis.lpush("test", "c");
+		mockJedis.lpush("test", "b");
+		mockJedis.lpush("test", "d");
 
 		try {
-			j.sort("test");
+			mockJedis.sort("test");
 			fail("Sorting numbers is default");
 		} catch (JedisDataException e) {
 		}
 
-		assertEquals(Arrays.asList("a", "b", "c", "d"), j.sort("test", new SortingParams().alpha()));
-		assertEquals(Arrays.asList("d", "c", "b", "a"), j.sort("test", new SortingParams().desc().alpha()));
+		assertEquals(Arrays.asList("a", "b", "c", "d"), mockJedis.sort("test", new SortingParams().alpha()));
+		assertEquals(Arrays.asList("d", "c", "b", "a"), mockJedis.sort("test", new SortingParams().desc().alpha()));
 
-		j.sort("test", new SortingParams().alpha(), "newkey");
+		mockJedis.sort("test", new SortingParams().alpha(), "newkey");
 
-		assertEquals(Arrays.asList("a", "b", "c", "d"), j.lrange("newkey", 0, 10));
+		assertEquals(Arrays.asList("a", "b", "c", "d"), mockJedis.lrange("newkey", 0, 10));
 
-		j.sadd("settest", "1", "2", "3", "4", "5", "6");
+		mockJedis.sadd("settest", "1", "2", "3", "4", "5", "6");
 
-		assertEquals(Arrays.asList("1", "2", "3", "4", "5", "6"), j.sort("settest"));
-		assertEquals(Arrays.asList("3", "4", "5"), j.sort("settest", new SortingParams().limit(2, 3)));
-		assertEquals(Arrays.asList("4", "3", "2"), j.sort("settest", new SortingParams().limit(2, 3).desc()));
+		assertEquals(Arrays.asList("1", "2", "3", "4", "5", "6"), mockJedis.sort("settest"));
+		assertEquals(Arrays.asList("3", "4", "5"), mockJedis.sort("settest", new SortingParams().limit(2, 3)));
+		assertEquals(Arrays.asList("4", "3", "2"), mockJedis.sort("settest", new SortingParams().limit(2, 3).desc()));
 	}
 
 	@Test(expected = JedisDataException.class)
 	public void testInvalidKeyTypeHashToString() {
-		j.hset("test", "test", "1");
-		j.get("test");
+		mockJedis.hset("test", "test", "1");
+		mockJedis.get("test");
 	}
 
 	@Test(expected = JedisDataException.class)
 	public void testInvalidKeyTypeHashToList() {
-		j.hset("test", "test", "1");
-		j.llen("test");
+		mockJedis.hset("test", "test", "1");
+		mockJedis.llen("test");
 	}
 
 	@Test(expected = JedisDataException.class)
 	public void testInvalidKeyTypeStringToHash() {
-		j.set("test", "test");
-		j.hget("test", "test");
+		mockJedis.set("test", "test");
+		mockJedis.hget("test", "test");
 	}
 
 	@Test(expected = JedisDataException.class)
 	public void testInvalidKeyTypeStringToList() {
-		j.set("test", "test");
-		j.lpop("test");
+		mockJedis.set("test", "test");
+		mockJedis.lpop("test");
 	}
 
 	@Test(expected = JedisDataException.class)
 	public void testInvalidKeyTypeListToHash() {
-		j.lpush("test", "test");
-		j.hgetAll("test");
+		mockJedis.lpush("test", "test");
+		mockJedis.hgetAll("test");
 	}
 
 	@Test(expected = JedisDataException.class)
 	public void testInvalidKeyTypeListToString() {
-		j.lpush("test", "test");
-		j.incr("test");
+		mockJedis.lpush("test", "test");
+		mockJedis.incr("test");
 	}
 
 	@Test
 	public void testKeys() {
-		j.set("A1", "value");
-		j.set("A2", "value");
-		j.set("A3", "value");
-		j.hset("B1", "name", "value");
-		j.hset("B2", "name", "value");
-		j.hset("C2C", "name", "value");
+		mockJedis.set("A1", "value");
+		mockJedis.set("A2", "value");
+		mockJedis.set("A3", "value");
+		mockJedis.hset("B1", "name", "value");
+		mockJedis.hset("B2", "name", "value");
+		mockJedis.hset("C2C", "name", "value");
 
-		assertEquals(6, j.keys("*").size());
-		assertEquals(1, j.keys("A1").size());
-		assertEquals(3, j.keys("A*").size());
-		assertEquals(2, j.keys("*1").size());
-		assertEquals(3, j.keys("*2*").size());
-		assertEquals(1, j.keys("C*C").size());
+		assertEquals(6, mockJedis.keys("*").size());
+		assertEquals(1, mockJedis.keys("A1").size());
+		assertEquals(3, mockJedis.keys("A*").size());
+		assertEquals(2, mockJedis.keys("*1").size());
+		assertEquals(3, mockJedis.keys("*2*").size());
+		assertEquals(1, mockJedis.keys("C*C").size());
 
-		j.set("testC2C", "value");
-		assertEquals(1, j.keys("C*C").size());
+		mockJedis.set("testC2C", "value");
+		assertEquals(1, mockJedis.keys("C*C").size());
 	}
 
 	@Test
 	public void testMultipleDB() {
-		assertEquals(0L, j.dbSize().longValue());
-		j.set("test", "test");
-		assertEquals(1L, j.dbSize().longValue());
-		j.move("test", 5);
-		assertEquals(0L, j.dbSize().longValue());
-		j.select(5);
-		assertEquals(1L, j.dbSize().longValue());
+		assertEquals(0L, mockJedis.dbSize().longValue());
+		mockJedis.set("test", "test");
+		assertEquals(1L, mockJedis.dbSize().longValue());
+		mockJedis.move("test", 5);
+		assertEquals(0L, mockJedis.dbSize().longValue());
+		mockJedis.select(5);
+		assertEquals(1L, mockJedis.dbSize().longValue());
 	}
 }

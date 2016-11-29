@@ -545,7 +545,19 @@ public class MockStorage {
 		return hash == null ? 0 : hash.size();
 	}
 
-	public synchronized int lpush(final DataContainer key, final DataContainer... string) {
+	public synchronized int lpush(final DataContainer key, final DataContainer... values) {
+		List<DataContainer> list = getListFromStorage(key, true);
+		if (list == null) {
+			list = new ArrayList<DataContainer>();
+			listStorage.put(key, list);
+		}
+		for (DataContainer value : values) {
+			list.add(0, value);
+		}
+		return list.size();
+	}
+
+	public long rpush(DataContainer key, DataContainer[] string) {
 		List<DataContainer> list = getListFromStorage(key, true);
 		if (list == null) {
 			list = new ArrayList<DataContainer>();

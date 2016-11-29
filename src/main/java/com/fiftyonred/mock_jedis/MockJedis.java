@@ -740,6 +740,11 @@ public class MockJedis extends Jedis {
 	}
 
 	@Override
+	public Long rpush(String key, String... strings) {
+		return pipeline.rpush(key, strings).get();
+	}
+
+	@Override
 	public Long llen(final String key) {
 		return pipeline.llen(key).get();
 	}
@@ -800,11 +805,6 @@ public class MockJedis extends Jedis {
 
 	@Override
 	public String substr(String key, int start, int end) {
-		throw new UnsupportedOperationException(NOT_IMPLEMENTED);
-	}
-
-	@Override
-	public Long rpush(String key, String... strings) {
 		throw new UnsupportedOperationException(NOT_IMPLEMENTED);
 	}
 

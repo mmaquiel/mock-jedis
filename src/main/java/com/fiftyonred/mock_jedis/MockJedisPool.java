@@ -32,9 +32,10 @@ public class MockJedisPool extends JedisPool {
 	public void setClient(final MockJedis client) {
 		this.client = client;
 	}
-	
+
 	@Override
-	public void returnResourceObject(final Jedis resource) { //required for compatibility with org.sedis.Sedis
-	                                                         //wrapper for Scala
-    	}
+	public void returnResourceObject(final Jedis resource) {
+		//required for compatibility with org.sedis.Sedis
+		//wrapper for Scala
+	}
 }
